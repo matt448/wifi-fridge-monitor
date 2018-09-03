@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <WiFi101.h>
 
+#include "hardware.h"
 #include "secrets.h"
 // Copy example_secrets.h to secrets.h
 // Then enter values for all fields in secrets.h
@@ -96,12 +97,19 @@ void printWifiRSSI() {
   Serial.println(" dBm");
 }
 
+String batteryDataString () {
+  float measuredvbat = analogRead(VBATPIN);
+  measuredvbat *= 2;    // we divided by 2, so multiply back
+  measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+  measuredvbat /= 1024; // convert to voltage
+  String vbatString = String(measuredvbat);
+  String data = ("\"battery-voltage\": \"" + vbatString + "\"");
+  return data;
+}
+
 String rssiDataString() {
   String rssiString = String(WiFi.RSSI());
   String data = String("\"rssi\": \"" + rssiString + "\"");
-
-  Serial.print("RSSI DATA: ");
-  Serial.println(data);
   return data;
 }
 
@@ -110,7 +118,8 @@ String buildDataString() {
   String deviceidData = String("\"device-id\": \"123XYZ\"");
   String fridgeTempData = String("\"fridge-temp\": \"38\"");
   String freezerTempData = String("\"freezer-temp\": \"18\"");
-  String data = String("{" + deviceidData + "," + rssiData + "," + fridgeTempData + "," + freezerTempData + "}");
+  String batteryData = batteryDataString();
+  String data = String("{" + deviceidData + "," + rssiData + "," + fridgeTempData + "," + freezerTempData + "," + batteryData + "}");
   return data;
 }
 
@@ -119,7 +128,6 @@ void connectToServer() {
   Serial.print("\nDATA: ");
   Serial.println(data);
   Serial.println("\nStarting connection to server...");
-  // if you get a connection, report back via serial:
   if (client.connect(server, 443)) {
     Serial.println("connected to server");
     // Make a HTTP request:
