@@ -3,14 +3,16 @@
 
 #include "secrets.h"
 // Copy example_secrets.h to secrets.h
-// Then enter ssid and password secrets.h
+// Then enter values for all fields in secrets.h
 char ssid[] = SECRET_SSID;        // wifi ssid
-char pass[] = SECRET_PASS;       // wifi network password (use for WPA, or use as key for WEP)
-int status = WL_IDLE_STATUS;     // the WiFi radio's status
+char pass[] = SECRET_PASS;        // wifi network password (use for WPA, or use as key for WEP)
+char server[] = SERVER_HOST_NAME; //Host name ex: www.myserver.foo
+char urlpath[] = URL_PATH;        //Path to api endpoint ex: /api/myfridge
 
-WiFiClient client;
+int status = WL_IDLE_STATUS;      // the WiFi radio's status
 
-char server[] = "mywififridge.free.beeceptor.com";
+WiFiSSLClient client;
+
 
 void setup() {
   WiFi.setPins(8,7,4,2);
@@ -29,7 +31,7 @@ void setup() {
 
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to WPA SSID: ");
+    Serial.print("Attempting to connect to wifi network: ");
     Serial.println(ssid);
     // Connect to WPA/WPA2 network:
     status = WiFi.begin(ssid, pass);
@@ -39,6 +41,7 @@ void setup() {
   }
 
   Serial.println("Connected to wifi");
+
   printWiFiStatus();
   connectToServer();
  
@@ -93,22 +96,48 @@ void printWifiRSSI() {
   Serial.println(" dBm");
 }
 
+String rssiDataString() {
+  String rssiString = String(WiFi.RSSI());
+  String data = String("\"rssi\": \"" + rssiString + "\"");
+
+  Serial.print("RSSI DATA: ");
+  Serial.println(data);
+  return data;
+}
+
+String buildDataString() {
+  String rssiData = rssiDataString();
+  String deviceidData = String("\"device-id\": \"123XYZ\"");
+  String fridgeTempData = String("\"fridge-temp\": \"38\"");
+  String freezerTempData = String("\"freezer-temp\": \"18\"");
+  String data = String("{" + deviceidData + "," + rssiData + "," + fridgeTempData + "," + freezerTempData + "}");
+  return data;
+}
+
 void connectToServer() {
-  String  data = "{\"foo\" : \"baz\"}";
-  //String  data = "foo=baz";
+  String data = buildDataString();
+  Serial.print("\nDATA: ");
+  Serial.println(data);
   Serial.println("\nStarting connection to server...");
   // if you get a connection, report back via serial:
-  if (client.connect(server, 80)) {
+  if (client.connect(server, 443)) {
     Serial.println("connected to server");
     // Make a HTTP request:
-    client.println("POST /api HTTP/1.1");
-    client.println("Host: mywififridge.free.beeceptor.com");
+    client.print("POST ");
+    client.print(urlpath);
+    client.println(" HTTP/1.1");
+    
+    client.print("Host: ");
+    client.println(server);
+    
     client.println("Content-Type: application/json");
+    
     client.print("Content-Length: ");
     client.println(data.length());
+    
     client.println();
     client.print(data);
-    client.println("Connection: close");
+    //client.println("Connection: close");
     client.println();
   }
   
