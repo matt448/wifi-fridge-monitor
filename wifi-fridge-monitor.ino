@@ -107,6 +107,17 @@ String batteryDataString () {
   return data;
 }
 
+String fridgeTempDataString() {
+  int reading = analogRead(FRIDGE_TEMP_PIN);
+  float voltage = reading * 3.3;
+  voltage /= 1024.0;
+  float temperatureC = (voltage - 0.5) * 100;
+  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
+  String tempFString = String(temperatureF);
+  String data = ("\"fridge-temp\": \"" + tempFString + "\"");
+  return data;
+}
+
 String rssiDataString() {
   String rssiString = String(WiFi.RSSI());
   String data = String("\"rssi\": \"" + rssiString + "\"");
@@ -116,10 +127,14 @@ String rssiDataString() {
 String buildDataString() {
   String rssiData = rssiDataString();
   String deviceidData = String("\"device-id\": \"123XYZ\"");
-  String fridgeTempData = String("\"fridge-temp\": \"38\"");
+  fridgeTempDataString();
+  String fridgeTempData = fridgeTempDataString();
   String freezerTempData = String("\"freezer-temp\": \"18\"");
+  String ambientTempData = String("\"ambient-temp\": \"92\"");
   String batteryData = batteryDataString();
-  String data = String("{" + deviceidData + "," + rssiData + "," + fridgeTempData + "," + freezerTempData + "," + batteryData + "}");
+  String data = String("{" + deviceidData + "," + rssiData + "," + fridgeTempData + "," + freezerTempData + "," + batteryData + "," + ambientTempData + "}");
+  Serial.print("DATA: ");
+  Serial.println(data);
   return data;
 }
 

@@ -1,2 +1,4 @@
 #define VBATPIN A7
 #define FRIDGE_TEMP_PIN A0
+#define FREEZER_TEMP_PIN A1
+#define AMBIENT_TEMP_PIN A2
