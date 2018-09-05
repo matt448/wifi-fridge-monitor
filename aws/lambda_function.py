@@ -15,7 +15,7 @@ def respond(err, res=None):
             'Content-Type': 'application/json',
         },
     }
-    
+
 def respondTEST(err, res=None):
     return {
         'statusCode': '400' if err else '200',
@@ -38,7 +38,7 @@ def lambda_handler(event, context):
     }
 
     operation = event['httpMethod']
-    
+
     if operation == 'POST':
         doPOST(event)
         return respond(None, 'This was a POST request.')
@@ -48,7 +48,7 @@ def lambda_handler(event, context):
     else:
         return respondTEST(ValueError, 'Unsupported method')
 
-    
+
     '''
     if operation in operations:
         payload = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
@@ -56,7 +56,7 @@ def lambda_handler(event, context):
     else:
         return respond(ValueError('Unsupported method "{}"'.format(operation)))
     '''
-    
+
 def doPOST(event):
     print('Entering doPOST')
     operation = event['httpMethod']
