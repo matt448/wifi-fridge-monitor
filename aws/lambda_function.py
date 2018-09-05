@@ -1,6 +1,7 @@
 import os
 import boto3
 import json
+import time
 
 print('Loading function')
 table_name = os.environ.get('DYNAMO_TABLE_NAME')
@@ -67,8 +68,10 @@ def doPOST(event):
     ambienttemp =  data['ambient-temp']
     batteryvoltage = data['battery-voltage']
     rssi = data['rssi']
+    t = int(time.time())
+    epochtime = t
+    datestr = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(t))
     print('OPERATION: ' + operation)
-    print('Doing put on table...')
     table.put_item(
        Item={
             'device-id': deviceid,
@@ -76,10 +79,11 @@ def doPOST(event):
             'freezer-temp': freezertemp,
             'ambient-temp': ambienttemp,
             'rssi': rssi,
-            'battery-voltage': batteryvoltage
+            'battery-voltage': batteryvoltage,
+            'epoch-time': epochtime,
+            'date-time': datestr
         }
     )
-    print('Done with put on table.')
 
 
 def doGET(event):
