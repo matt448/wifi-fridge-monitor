@@ -1,5 +1,6 @@
 #include <SPI.h>
 #include <WiFi101.h>
+#include <LiquidCrystal.h>
 
 #include "hardware.h"
 #include "secrets.h"
@@ -14,9 +15,17 @@ int status = WL_IDLE_STATUS;      // the WiFi radio's status
 
 WiFiSSLClient client;
 
+LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+
+float fridgeF, fridgeC;
+float freezerF, freezerC;
+float ambientF, ambientC;
+
 
 void setup() {
-  WiFi.setPins(8,7,4,2);
+  WiFi.setPins(WIFI_CS, WIFI_IRQ, WIFI_RST, WIFI_EN);
+  lcd.begin(LCD_W, LCD_H);
+  lcd.print("hello, world!");
 
   Serial.begin(115200);
   while (!Serial) {
@@ -52,6 +61,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   //delay(5000);
   //printWifiRSSI();
+  lcd.setCursor(0,3);
+  lcd.print(WiFi.RSSI());
   
   // if there are incoming bytes available
   // from the server, read them and print them:
@@ -107,13 +118,24 @@ String batteryDataString () {
   return data;
 }
 
-String fridgeTempDataString() {
-  int reading = analogRead(FRIDGE_TEMP_PIN);
+float readTempSensor(byte pin) {
+  int reading = analogRead(pin);
   float voltage = reading * 3.3;
   voltage /= 1024.0;
   float temperatureC = (voltage - 0.5) * 100;
   float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
-  String tempFString = String(temperatureF);
+  return temperatureC;
+}
+
+float convertCtoF(float temperatureC) {
+  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
+  return temperatureF;
+}
+
+String fridgeTempDataString() {
+  fridgeC = readTempSensor(FRIDGE_TEMP_PIN);
+  fridgeF = convertCtoF(fridgeC);
+  String tempFString = String(fridgeF);
   String data = ("\"fridge-temp\": \"" + tempFString + "\"");
   return data;
 }
