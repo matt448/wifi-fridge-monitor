@@ -57,12 +57,12 @@ void setup() {
  
 }
 
+////////////////////////////////////
+// START MAIN LOOP
+////////////////////////////////////
 void loop() {
-  // put your main code here, to run repeatedly:
-  //delay(5000);
-  //printWifiRSSI();
-  lcd.setCursor(0,3);
-  lcd.print(WiFi.RSSI());
+  gatherTempSensorData();
+  drawLCDScreen1();
   
   // if there are incoming bytes available
   // from the server, read them and print them:
@@ -81,7 +81,9 @@ void loop() {
     while (true);
   }
 }
-
+////////////////////////////////////
+// END MAIN LOOP
+////////////////////////////////////
 
 void printWiFiStatus() {
   // print the SSID of the network you're attached to:
@@ -130,6 +132,15 @@ float readTempSensor(byte pin) {
 float convertCtoF(float temperatureC) {
   float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
   return temperatureF;
+}
+
+void gatherTempSensorData() {
+  fridgeC = readTempSensor(FRIDGE_TEMP_PIN);
+  fridgeF = convertCtoF(fridgeC);
+  freezerC = readTempSensor(FREEZER_TEMP_PIN);
+  freezerF = convertCtoF(freezerC);
+  ambientC = readTempSensor(AMBIENT_TEMP_PIN);
+  ambientF = convertCtoF(ambientC);
 }
 
 String fridgeTempDataString() {
@@ -187,3 +198,28 @@ void connectToServer() {
   }
   
 }
+
+void lcdBlankLine(int linenum) {
+  lcd.setCursor(0, linenum);
+  lcd.print("                    ");
+}
+
+void drawLCDScreen1() {
+  lcdBlankLine(0);
+  lcd.setCursor(0,0);
+  lcd.print(" FRIDGE: ");
+  lcd.print(fridgeF);
+
+  lcd.setCursor(0,1);
+  lcd.print("FREEZER: ");
+  lcd.print(freezerF);
+
+  lcd.setCursor(0,2);
+  lcd.print("AMBIENT: ");
+  lcd.print(ambientF);
+
+  lcd.setCursor(0,3);
+  lcd.print("   WIFI: ");
+  lcd.print(WiFi.RSSI());
+}
+
