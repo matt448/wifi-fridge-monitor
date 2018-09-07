@@ -1,10 +1,9 @@
 #include <SPI.h>
 #include <WiFi101.h>
-#include <LiquidCrystal.h>
+#include "LCD.h"
+#include "pin_definitions.h"
+#include "secrets.h" // Copy example_secrets.h to secrets.h
 
-#include "hardware.h"
-#include "secrets.h"
-// Copy example_secrets.h to secrets.h
 // Then enter values for all fields in secrets.h
 char ssid[] = SECRET_SSID;        // wifi ssid
 char pass[] = SECRET_PASS;        // wifi network password (use for WPA, or use as key for WEP)
@@ -15,23 +14,24 @@ int status = WL_IDLE_STATUS;      // the WiFi radio's status
 
 WiFiSSLClient client;
 
-LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
-
 float fridgeF, fridgeC;
 float freezerF, freezerC;
 float ambientF, ambientC;
+long rssi;
 
 
 void setup() {
   WiFi.setPins(WIFI_CS, WIFI_IRQ, WIFI_RST, WIFI_EN);
-  lcd.begin(LCD_W, LCD_H);
-  lcd.print("hello, world!");
-
+  
   Serial.begin(115200);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
+  lcdSetup();
+  lcdBlankScreen();
+  lcdDrawStartScreen();
+  
   // check for the presence of the shield:
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present");
@@ -52,17 +52,19 @@ void setup() {
 
   Serial.println("Connected to wifi");
 
+  gatherData();
   printWiFiStatus();
   connectToServer();
- 
 }
+
+
 
 ////////////////////////////////////
 // START MAIN LOOP
 ////////////////////////////////////
 void loop() {
-  gatherTempSensorData();
-  drawLCDScreen1();
+  gatherData();
+  lcdDrawScreen1();
   
   // if there are incoming bytes available
   // from the server, read them and print them:
@@ -80,6 +82,7 @@ void loop() {
     // do nothing forevermore:
     while (true);
   }
+  delay(250);
 }
 ////////////////////////////////////
 // END MAIN LOOP
@@ -96,7 +99,6 @@ void printWiFiStatus() {
   Serial.println(ip);
 
   // print the received signal strength:
-  long rssi = WiFi.RSSI();
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
@@ -104,7 +106,6 @@ void printWiFiStatus() {
 
 void printWifiRSSI() {
   // print the received signal strength:
-  long rssi = WiFi.RSSI();
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
@@ -134,25 +135,26 @@ float convertCtoF(float temperatureC) {
   return temperatureF;
 }
 
-void gatherTempSensorData() {
+void gatherData() {
   fridgeC = readTempSensor(FRIDGE_TEMP_PIN);
   fridgeF = convertCtoF(fridgeC);
+  delay(20);
   freezerC = readTempSensor(FREEZER_TEMP_PIN);
   freezerF = convertCtoF(freezerC);
+  delay(20);
   ambientC = readTempSensor(AMBIENT_TEMP_PIN);
   ambientF = convertCtoF(ambientC);
+  rssi = WiFi.RSSI();
 }
 
 String fridgeTempDataString() {
-  fridgeC = readTempSensor(FRIDGE_TEMP_PIN);
-  fridgeF = convertCtoF(fridgeC);
   String tempFString = String(fridgeF);
   String data = ("\"fridge-temp\": \"" + tempFString + "\"");
   return data;
 }
 
 String rssiDataString() {
-  String rssiString = String(WiFi.RSSI());
+  String rssiString = String(rssi);
   String data = String("\"rssi\": \"" + rssiString + "\"");
   return data;
 }
@@ -199,27 +201,5 @@ void connectToServer() {
   
 }
 
-void lcdBlankLine(int linenum) {
-  lcd.setCursor(0, linenum);
-  lcd.print("                    ");
-}
 
-void drawLCDScreen1() {
-  lcdBlankLine(0);
-  lcd.setCursor(0,0);
-  lcd.print(" FRIDGE: ");
-  lcd.print(fridgeF);
-
-  lcd.setCursor(0,1);
-  lcd.print("FREEZER: ");
-  lcd.print(freezerF);
-
-  lcd.setCursor(0,2);
-  lcd.print("AMBIENT: ");
-  lcd.print(ambientF);
-
-  lcd.setCursor(0,3);
-  lcd.print("   WIFI: ");
-  lcd.print(WiFi.RSSI());
-}
 
