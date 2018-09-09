@@ -14,10 +14,15 @@ int status = WL_IDLE_STATUS;      // the WiFi radio's status
 
 WiFiSSLClient client;
 
+//Global temperature variables
 float fridgeF, fridgeC;
 float freezerF, freezerC;
 float ambientF, ambientC;
 long rssi;
+
+//Timers
+const int lcdInterval=1000;
+unsigned long previousLcdMillis=0;
 
 
 void setup() {
@@ -61,7 +66,11 @@ void setup() {
 ////////////////////////////////////
 void loop() {
   gatherData();
-  lcdDrawScreen1();
+  unsigned long currentLcdMillis = millis();
+  if ((unsigned long)(currentLcdMillis - previousLcdMillis) >= lcdInterval) {
+    lcdDrawScreen1();
+    previousLcdMillis = currentLcdMillis;
+  }
   
   // if there are incoming bytes available
   // from the server, read them and print them:
@@ -79,7 +88,6 @@ void loop() {
     // do nothing forevermore:
     while (true);
   }
-  delay(250);
 }
 ////////////////////////////////////
 // END MAIN LOOP
