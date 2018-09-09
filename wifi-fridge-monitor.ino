@@ -24,9 +24,6 @@ void setup() {
   WiFi.setPins(WIFI_CS, WIFI_IRQ, WIFI_RST, WIFI_EN);
   
   Serial.begin(115200);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
 
   lcdSetup();
   lcdBlankScreen();
