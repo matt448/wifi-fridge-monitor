@@ -24,6 +24,9 @@ long rssi;
 const int lcdInterval=1000;
 unsigned long previousLcdMillis=0;
 
+const int dataInterval=300000;
+unsigned long previousDataMillis=0;
+
 
 void setup() {
   WiFi.setPins(WIFI_CS, WIFI_IRQ, WIFI_RST, WIFI_EN);
@@ -56,7 +59,6 @@ void setup() {
 
   gatherData();
   printWiFiStatus();
-  connectToServer();
 }
 
 
@@ -65,11 +67,22 @@ void setup() {
 // START MAIN LOOP
 ////////////////////////////////////
 void loop() {
+  // Get latest sensor data on every loop
   gatherData();
+
+  // Update LCD Screen on interval
   unsigned long currentLcdMillis = millis();
   if ((unsigned long)(currentLcdMillis - previousLcdMillis) >= lcdInterval) {
     lcdDrawScreen1();
     previousLcdMillis = currentLcdMillis;
+  }
+
+
+  // Upload data to API on interval
+  unsigned long currentDataMillis = millis();
+  if ((unsigned long)(currentDataMillis - previousDataMillis) >= dataInterval) {
+    dataUploadToAPI();
+    previousDataMillis = currentDataMillis;
   }
   
   // if there are incoming bytes available
@@ -81,12 +94,9 @@ void loop() {
 
   // if the server's disconnected, stop the client:
   if (!client.connected()) {
-    Serial.println();
-    Serial.println("disconnecting from server.");
+    //Serial.println();
+    //Serial.println("disconnecting from server.");
     client.stop();
-
-    // do nothing forevermore:
-    while (true);
   }
 }
 ////////////////////////////////////
@@ -143,10 +153,10 @@ float convertCtoF(float temperatureC) {
 void gatherData() {
   fridgeC = readTempSensor(FRIDGE_TEMP_PIN);
   fridgeF = convertCtoF(fridgeC);
-  delay(20);
+  delay(30);
   freezerC = readTempSensor(FREEZER_TEMP_PIN);
   freezerF = convertCtoF(freezerC);
-  delay(20);
+  delay(30);
   ambientC = readTempSensor(AMBIENT_TEMP_PIN);
   ambientF = convertCtoF(ambientC);
   rssi = WiFi.RSSI();
@@ -155,6 +165,12 @@ void gatherData() {
 String fridgeTempDataString() {
   String tempFString = String(fridgeF);
   String data = ("\"fridge-temp\": \"" + tempFString + "\"");
+  return data;
+}
+
+String freezerTempDataString() {
+  String tempFString = String(freezerF);
+  String data = ("\"freezer-temp\": \"" + tempFString + "\"");
   return data;
 }
 
@@ -167,9 +183,9 @@ String rssiDataString() {
 String buildDataString() {
   String rssiData = rssiDataString();
   String deviceidData = String("\"device-id\": \"123XYZ\"");
-  fridgeTempDataString();
+  //fridgeTempDataString();
   String fridgeTempData = fridgeTempDataString();
-  String freezerTempData = String("\"freezer-temp\": \"18\"");
+  String freezerTempData = freezerTempDataString();
   String ambientTempData = String("\"ambient-temp\": \"92\"");
   String batteryData = batteryDataString();
   String data = String("{" + deviceidData + "," + rssiData + "," + fridgeTempData + "," + freezerTempData + "," + batteryData + "," + ambientTempData + "}");
@@ -178,7 +194,7 @@ String buildDataString() {
   return data;
 }
 
-void connectToServer() {
+void dataUploadToAPI() {
   String data = buildDataString();
   Serial.print("\nDATA: ");
   Serial.println(data);
