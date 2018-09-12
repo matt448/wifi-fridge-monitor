@@ -4,6 +4,8 @@
 #include "pin_definitions.h"
 #include "secrets.h" // Copy example_secrets.h to secrets.h
 
+#define WIFI_STARTUP_DELAY 10000
+
 // Then enter values for all fields in secrets.h
 char ssid[] = SECRET_SSID;        // wifi ssid
 char pass[] = SECRET_PASS;        // wifi network password (use for WPA, or use as key for WEP)
@@ -44,18 +46,7 @@ void setup() {
     while (true);
   }
 
-  // attempt to connect to WiFi network:
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to wifi network: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network:
-    status = WiFi.begin(ssid, pass);
-
-    // wait 10 seconds for connection:
-    delay(10000);
-  }
-
-  Serial.println("Connected to wifi");
+  connectToWifi();
 
   gatherData();
   printWiFiStatus();
@@ -96,6 +87,7 @@ void loop() {
   if (!client.connected()) {
     //Serial.println();
     //Serial.println("disconnecting from server.");
+    client.flush();
     client.stop();
   }
 }
@@ -124,6 +116,18 @@ void printWifiRSSI() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+}
+
+void connectToWifi() {
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to wifi network: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network:
+    status = WiFi.begin(ssid, pass);
+    // wait a bit for connection:
+    delay(WIFI_STARTUP_DELAY);
+  }
+  Serial.println("Connected to wifi");
 }
 
 String batteryDataString () {
