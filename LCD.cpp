@@ -34,28 +34,46 @@ void lcdDrawStartScreen() {
 void lcdDrawScreen1() {
   lcdBlankLine(0);
   lcd.setCursor(0,0);
-  lcd.print("FRDG: ");
+  lcd.print(" FRIDGE");
+  lcd.setCursor(8,0);
   lcd.print(int(fridgeF));
   lcd.print((char)223);
   lcd.print("F");
+  lcd.setCursor(14,0);
+  lcd.print("CLOSED");
 
   lcdBlankLine(1);
   lcd.setCursor(0,1);
-  lcd.print("FRZR: ");
+  lcd.print("FREEZER");
+  lcd.setCursor(8,1);
   lcd.print(int(freezerF));
   lcd.print((char)223);
   lcd.print("F");
+  lcd.setCursor(14,1);
+  lcd.print(">OPEN<");
 
   lcdBlankLine(2);
   lcd.setCursor(0,2);
-  lcd.print("AMBT: ");
+  lcd.print("AMBIENT");
+  lcd.setCursor(8,2);
   lcd.print(int(ambientF));
   lcd.print((char)223);
   lcd.print("F");
 
   lcdBlankLine(3);
   lcd.setCursor(0,3);
-  lcd.print("WIFI: ");
+  lcd.print(" STATUS");
+  lcd.setCursor(8,3);
+  lcd.print("OK");
+}
+
+
+void lcdDrawScreen2() {
+  lcdBlankLine(3);
+  lcd.setCursor(0,3);
+  lcd.print("   WIFI");
+  lcd.setCursor(8,3);
   lcd.print(rssi);
   lcd.print("dBm");
 }
+
